@@ -3,6 +3,8 @@ import time
 import numpy as np
 import os
 import math
+from datetime import datetime
+from logger import Logger
 
 class AutoRec():
     def __init__(self,sess,args,
@@ -41,7 +43,8 @@ class AutoRec():
         self.optimizer_method = args.optimizer_method
         self.display_step = args.display_step
         self.random_seed = args.random_seed
-
+        self.save_step = args.save_step
+        
         self.global_step = tf.Variable(0, trainable=False)
         self.decay_epoch_step = args.decay_epoch_step
         self.decay_step = self.decay_epoch_step * self.num_batch
@@ -55,6 +58,11 @@ class AutoRec():
 
         self.result_path = result_path
         self.grad_clip = args.grad_clip
+        
+        self.timestamp = str(datetime.timestamp(datetime.now()))
+        self.logger = Logger()
+        self.session_log_path = "log/{}/".format(self.timestamp)
+        self.logger.create_session_folder(self.session_log_path)
 
     def run(self):
         self.prepare_model()
@@ -63,6 +71,11 @@ class AutoRec():
         for epoch_itr in range(self.train_epoch):
             self.train_model(epoch_itr)
             self.test_model(epoch_itr)
+            
+            # Save the variables to disk.
+            if epoch_itr % self.save_step == 0:
+                self.saver.save(self.sess, self.session_log_path + "models/epoch_{}".format(epoch_itr))
+                
         self.make_records()
 
     def prepare_model(self):
@@ -101,6 +114,8 @@ class AutoRec():
             self.optimizer = optimizer.apply_gradients(capped_gvs, global_step=self.global_step)
         else:
             self.optimizer = optimizer.minimize(self.cost, global_step=self.global_step)
+            
+        self.saver = tf.train.Saver(max_to_keep=None)
 
     def train_model(self,itr):
         start_time = time.time()

@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+
+data/intersect-20m/
+data/ml-20m/
+
+log/*/models
+
