@@ -1,5 +1,6 @@
 __pycache__/
 *.pyc
+.ipynb_checkpoints
 
 data/intersect-20m/
 data/ml-20m/
